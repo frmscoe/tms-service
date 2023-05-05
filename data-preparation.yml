@@ -16,7 +16,7 @@ functions:
       com.openfaas.scale.max: 10 
 #       com.openfaas.scale.zero: false 
 #       com.openfaas.scale.zero-duration: 15m
-      com.openfaas.scale.target: 50 
-      com.openfaas.scale.target-proportion: 0.90
+#       com.openfaas.scale.target: 50 
+#       com.openfaas.scale.target-proportion: 0.90
     secrets:
       - frmpullsecret
