@@ -11,9 +11,9 @@ functions:
     labels:
       com.openfaas.health.http.initialDelay: "45s" 
       com.openfaas.profile: nodeselector 
-      com.openfaas.scale.type: rps 
-      com.openfaas.scale.min: 1 
-      com.openfaas.scale.max: 10 
+#       com.openfaas.scale.type: rps 
+#       com.openfaas.scale.min: 1 
+#       com.openfaas.scale.max: 10 
 #       com.openfaas.scale.zero: false 
 #       com.openfaas.scale.zero-duration: 15m
 #       com.openfaas.scale.target: 50 
