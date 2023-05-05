@@ -11,6 +11,7 @@ functions:
     labels:
       com.openfaas.health.http.initialDelay: "45s" 
       com.openfaas.profile: nodeselector 
+# The following labels are not available in openfaas community edition.
 #       com.openfaas.scale.type: rps 
 #       com.openfaas.scale.min: 1 
 #       com.openfaas.scale.max: 10 
