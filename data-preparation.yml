@@ -1,13 +1,13 @@
 version: 1.0
 provider:
   name: openfaas
-  gateway: https://frmfaas.sybrin.com
+  gateway: OPENFAAS_URL
 functions:
   data-preparation:
     namespace: openfaas-fn
     lang: dockerfile
     handler: .
-    image: actio.azurecr.io/data-preparation:latest
+    image: DOCKER_REGISTRY/data-preparation:latest
     labels:
       com.openfaas.health.http.initialDelay: "45s" 
       com.openfaas.profile: nodeselector 
