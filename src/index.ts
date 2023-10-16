@@ -1,8 +1,6 @@
 import './apm';
 import { LoggerService, type DatabaseManagerInstance } from '@frmscoe/frms-coe-lib';
 import { StartupFactory, type IStartupService } from '@frmscoe/frms-coe-startup-lib';
-import cluster from 'cluster';
-import os from 'os';
 import { CacheDatabaseService } from './clients/cache-database';
 import initializeFastifyClient from './clients/fastify';
 import { configuration } from './config';
@@ -83,28 +81,16 @@ process.on('unhandledRejection', (err) => {
   loggerService.error(`process on unhandledRejection error: ${JSON.stringify(err) ?? '[NoMetaData]'}`);
 });
 
-const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
-
-if (cluster.isPrimary && configuration.maxCPU !== 1) {
-  for (let i = 1; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  cluster.on('exit', (worker, code, signal) => {
-    cluster.fork();
-  });
-} else {
-  (async () => {
-    try {
-      if (process.env.NODE_ENV !== 'test') {
-        await dbInit();
-        await runServer();
-      }
-    } catch (err) {
-      loggerService.error(`Error while starting NATS server on Worker ${process.pid}`, err);
-      process.exit(1);
+(async () => {
+  try {
+    if (process.env.NODE_ENV !== 'test') {
+      await dbInit();
+      await runServer();
     }
-  })();
-}
+  } catch (err) {
+    loggerService.error(`Error while starting NATS server on Worker ${process.pid}`, err);
+    process.exit(1);
+  }
+})();
 
 export { cacheDatabaseClient, databaseManager };

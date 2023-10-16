@@ -208,9 +208,9 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   };
 
   const accountInserts = [cacheDatabaseClient.addAccount(debtorAcctId), cacheDatabaseClient.addAccount(creditorAcctId)];
-
+  let dataCache: DataCache | undefined;
   if (!configuration.quoting) {
-    const dataCache: DataCache = {
+    dataCache = {
       cdtrId: creditorId,
       dbtrId: debtorId,
       cdtrAcctId: creditorAcctId,
@@ -238,7 +238,6 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
   }
   cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
 
-  let dataCache;
   const spanDataCache = apm.startSpan('req.get.dataCache.pacs008');
   try {
     const dataCacheJSON = (await databaseManager.getBuffer(EndToEndId)).DataCache;
@@ -250,6 +249,7 @@ export const handlePacs008 = async (transaction: Pacs008): Promise<void> => {
     spanDataCache?.end();
   }
 
+  cacheDatabaseClient.saveTransactionRelationship(transactionRelationship);
   const spanInsert = apm.startSpan('db.insert.pacs008');
   try {
     await Promise.all([

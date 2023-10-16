@@ -1,0 +1,1 @@
+module.exports = require('@sensorfactdev/mock-node-nats');
