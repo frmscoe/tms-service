@@ -36,7 +36,7 @@
   "dependencies": {
     "@fastify/cors": "^8.3.0",
     "@fastify/response-validation": "^2.5.0",
-    "@fastify/swagger": "^8.8.0",
+    "@fastify/swagger": "^8.14.0",
     "@frmscoe/frms-coe-lib": "^2.2.4",
     "@frmscoe/frms-coe-startup-lib": "^2.1.2",
     "@log4js-node/logstash-http": "^1.1.0",
