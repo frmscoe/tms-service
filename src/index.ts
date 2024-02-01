@@ -41,17 +41,17 @@ let cacheDatabaseClient: CacheDatabaseService;
 export const dbInit = async (): Promise<void> => {
   databaseManager = await Singleton.getDatabaseManager(databaseManagerConfig);
   cacheDatabaseClient = await CacheDatabaseService.create(databaseManager, configuration.cacheTTL);
-  loggerService.log(JSON.stringify(databaseManager.isReadyCheck()));
+  console.log(JSON.stringify(databaseManager.isReadyCheck()));
 };
 
 const connect = async (): Promise<void> => {
   let isConnected = false;
   for (let retryCount = 0; retryCount < 10; retryCount++) {
-    loggerService.log(`Connecting to nats server...`);
+    console.log(`Connecting to nats server...`);
     if (!(await server.initProducer())) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
     } else {
-      loggerService.log(`Connected to nats`);
+      console.log(`Connected to nats`);
       isConnected = true;
       break;
     }
@@ -64,10 +64,10 @@ const connect = async (): Promise<void> => {
   const fastify = await initializeFastifyClient();
   fastify.listen({ port: configuration.port, host: '0.0.0.0' }, (err, address) => {
     if (err) {
-      loggerService.error(err);
+      console.error(err);
       throw Error(`${err.message}`);
     }
-    loggerService.log(`Fastify listening on ${address}`);
+    console.log(`Fastify listening on ${address}`);
   });
 };
 
@@ -77,11 +77,11 @@ export const runServer = async (): Promise<void> => {
 };
 
 process.on('uncaughtException', (err) => {
-  loggerService.error('process on uncaughtException error', err, 'index.ts');
+  console.error('process on uncaughtException error', err, 'index.ts');
 });
 
 process.on('unhandledRejection', (err) => {
-  loggerService.error(`process on unhandledRejection error: ${JSON.stringify(err) ?? '[NoMetaData]'}`);
+  console.error(`process on unhandledRejection error: ${JSON.stringify(err) ?? '[NoMetaData]'}`);
 });
 
 const numCPUs = os.cpus().length > configuration.maxCPU ? configuration.maxCPU + 1 : os.cpus().length + 1;
@@ -102,7 +102,7 @@ if (cluster.isPrimary && configuration.maxCPU !== 1) {
         await runServer();
       }
     } catch (err) {
-      loggerService.error(`Error while starting NATS server on Worker ${process.pid}`, err);
+      console.error(`Error while starting NATS server on Worker ${process.pid}`, err);
       process.exit(1);
     }
   })();
