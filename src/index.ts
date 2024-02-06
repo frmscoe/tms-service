@@ -72,7 +72,7 @@ const connect = async (): Promise<void> => {
 };
 
 export const runServer = async (): Promise<void> => {
-  server = new StartupFactory();
+  server = new StartupFactory(loggerService);
   if (configuration.env !== 'test') await connect();
 };
 
