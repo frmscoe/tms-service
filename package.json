@@ -37,7 +37,7 @@
     "@fastify/cors": "^8.3.0",
     "@fastify/response-validation": "^2.5.0",
     "@fastify/swagger": "^8.8.0",
-    "@frmscoe/frms-coe-lib": "https://github.com/rtkay123/coe-lib.git#3f3c021",
+    "@frmscoe/frms-coe-lib": "https://github.com/rtkay123/coe-lib.git#4f1a4f3",
     "@frmscoe/frms-coe-startup-lib": "https://github.com/rtkay123/startup-lib.git#5b3cd69",
     "@log4js-node/logstash-http": "^1.1.0",
     "arangojs": "^8.4.0",
