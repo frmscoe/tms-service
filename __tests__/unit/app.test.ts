@@ -253,19 +253,11 @@ describe('App Controller & Logic Service', () => {
         ]);
       });
 
-      const handleSpy = jest.spyOn(LogicService, 'rebuildCachePain001');
-
-      await LogicService.handlePain013(request);
-      expect(handleSpy).toBeCalledTimes(1);
-      expect(handleSpy).toHaveReturned();
-
       jest.spyOn(databaseManager, 'getTransactionPain001').mockImplementation((key: any) => {
         return Promise.resolve([[Pain001Sample]]);
       });
 
       await LogicService.handlePain013(request);
-      expect(handleSpy).toBeCalledTimes(2);
-      expect(handleSpy).toHaveReturned();
     });
   });
 });
