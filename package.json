@@ -27,7 +27,7 @@
     "node": ">=22.17"
   },
   "dependencies": {
-    "@fastify/cors": "^11.1.0",
+    "@fastify/cors": "^11.3.0",
     "@fastify/response-validation": "^3.0.3",
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
