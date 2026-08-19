@@ -1061,14 +1061,15 @@ DOCKER_PASSWORD=
 KUBE_CONFIG_DATA=(**base64 encoded kubeconfig data)
 ```
 
-2. The `helm-package-build` workflow is triggered by a push to the main branch. 
-it builds the docker image and pushes it to the dockerhub repository and then builds the helm chart and pushes it to the helm chart repository(docker hub).
+2. The `helm-package-build` workflow is triggered by a push to the main branch. It templates the charts to confirm if they are deployable, checks for lint issues and then packages and pushes it to the helm chart repository(docker hub).
 
-3. Before deploying the helm chart, ensure the `frmpullsecret` is created in the kubernetes cluster for pulling the images.
+3. When packaging and publishing the helm chart, the tag of the helm chart is set to the version of the Chart, which is defined in the `version` field in charts/tms-service/Chart.yaml file.
+
+4. Before deploying the helm chart, ensure the `frmpullsecret` is created in the kubernetes cluster for pulling the images.
 
 Create a secret with the name `frmpullsecret` with kubectl:
 ```shell
 kubectl create secret docker-registry frmpullsecret --docker-server=https://index.docker.io/v1/ --docker-username=username --docker-password=password --docker-email=email`
 ```
 
-4. The `helm-package-deploy` workflow is triggered manually. It deploys the tms-service helm chart to the kubernetes cluster using the kubeconfig secret variable provided in the project.
+5. The `helm-package-deploy` workflow is triggered manually. It deploys the tms-service helm chart to the kubernetes cluster using the kubeconfig secret variable provided in the project.
