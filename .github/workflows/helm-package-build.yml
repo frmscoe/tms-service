@@ -1,0 +1,95 @@
+# SPDX-License-Identifier: Apache-2.0
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# GitHub recommends pinning actions to a commit SHA.
+# To get a newer version, you will need to update the SHA.
+# You can also reference a tag or branch, but the action may change without warning.
+
+# Please do not attempt to edit this flow without the direct consent from the DevOps team. This file is managed centrally.
+
+name: Publish TMS Service Helm Chart
+
+on:
+  push:
+    branches: [ "main" ]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  package_and_push_chart:
+    if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
+    name: Package and Push Helm Chart to Docker Hub
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+
+      - name: Set up Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
+        with:
+          version: v3.8.1
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set ENV variables
+        run: |
+          echo "REPO_NAME=${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}" >> $GITHUB_ENV
+
+      - name: Get chart metadata
+        id: chart_meta
+        run: |
+          echo "NAME=$(grep '^name:' ./charts/tms-service/Chart.yaml | awk '{print $2}')" >> $GITHUB_OUTPUT
+          echo "VERSION=$(grep '^version:' ./charts/tms-service/Chart.yaml | awk '{print $2}')" >> $GITHUB_OUTPUT
+          echo "APP_VERSION=$(grep '^appVersion:' ./charts/tms-service/Chart.yaml | awk '{print $2}' | tr -d '"')" >> $GITHUB_OUTPUT
+
+      - name: Lint Helm chart
+        run: helm lint ./charts/tms-service
+
+      - name: Render Helm chart templates
+        run: |
+          helm template tms-service ./charts/tms-service --set image.repository=tazamaorg/${{ env.REPO_NAME }} --set image.tag=${{ steps.chart_meta.outputs.APP_VERSION }}
+
+      - name: Package Helm chart
+        run: helm package ./charts/tms-service
+
+      - name: Push Helm chart to Docker Hub
+        run: |
+          helm push ${{ steps.chart_meta.outputs.NAME }}-${{ steps.chart_meta.outputs.VERSION }}.tgz oci://docker.io/tazamaorg
+
+      - name: Resolve source PR
+        id: src_pr
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_URL=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" --jq '.[0].html_url // empty' 2>/dev/null || true)
+          echo "PR_URL=${PR_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Send Slack Notification
+        if: always()
+        continue-on-error: true
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SERVICE_NAME: ${{ env.REPO_NAME }} (Helm)
+          CHART_REPOSITORY: oci://docker.io/tazamaorg/${{ steps.chart_meta.outputs.NAME }}:${{ steps.chart_meta.outputs.VERSION }}
+          PR_URL: ${{ steps.src_pr.outputs.PR_URL }}
+          JOB_STATUS: ${{ job.status }}
+          BRANCH_NAME: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -z "$SLACK_WEBHOOK_URL" ] && echo "SLACK_WEBHOOK_URL is not configured. Skipping Slack notification." && exit 0
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+          curl --fail-with-body -sS -X POST -H 'Content-type: application/json' --data "$(jq -n --arg title "$([ "$JOB_STATUS" = "success" ] && echo "New Helm Chart published :chart_with_upwards_trend:" || echo "Helm chart publish failed :x:")" --arg service "$SERVICE_NAME" --arg status "$JOB_STATUS" --arg chart "$CHART_REPOSITORY" --arg branch "$BRANCH_NAME" --arg sha "$SHORT_SHA" --arg pr "$PR_URL" --arg run "$RUN_URL" '{blocks:[{type:"header",text:{type:"plain_text",text:$title,emoji:true}},{type:"section",fields:([{type:"mrkdwn",text:("*Service:*\n"+$service)},{type:"mrkdwn",text:("*Status:*\n"+$status)},{type:"mrkdwn",text:("*Chart:*\n`"+$chart+"`")},{type:"mrkdwn",text:("*Branch:*\n`"+$branch+"`")},{type:"mrkdwn",text:("*Commit:*\n`"+$sha+"`")},{type:"mrkdwn",text:("*Workflow Run:*\n<"+$run+"|Open run>")}]+(if $pr != "" then [{type:"mrkdwn",text:("*Source PR:*\n<"+$pr+"|Open PR>")}] else [] end))}]}')" "$SLACK_WEBHOOK_URL"
